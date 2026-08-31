@@ -13,7 +13,7 @@ export interface UserProps extends Document {
     isVerified: boolean;
     verifyCodeExpiry: Date;
     isAcceptingMessage: boolean;
-    messages:[];
+    messages: MessageProps[];
 
 }
 
@@ -65,6 +65,6 @@ const UserSchema: Schema<UserProps> = new Schema({
 
 })
 
-const userModel = (mongoose.models.User as mongoose.Model<UserProps>) || mongoose.model<UserProps>("User", UserSchema)
+const UserModel = (mongoose.models.User as mongoose.Model<UserProps>) || mongoose.model<UserProps>("User", UserSchema)
 
-export default userModel;
+export default UserModel;
