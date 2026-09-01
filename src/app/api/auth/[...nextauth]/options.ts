@@ -11,16 +11,16 @@ export const authOptions: NextAuthOptions = {
             name: "Credential",
             credentials: {
                 email: { label: "Email", type: "text" },
-                password: { label: "Password", type: "password"}
+                password: { label: "Password", type: "password" }
             },
 
-            async authorize(credentials:any):Promise<any>{
+            async authorize(credentials: any): Promise<any> {
                 await databaseConnection()
                 try {
                     const user = await UserModel.findOne({
-                        $or:[
-                            {email:credentials.identifier},
-                            {password:credentials.identifier},
+                        $or: [
+                            { email: credentials.identifier },
+                            { password: credentials.identifier },
                         ]
                     })
 
@@ -28,17 +28,17 @@ export const authOptions: NextAuthOptions = {
                         throw new Error('user not found with this email or username')
                     }
 
-                    if(!user.isVerified){
+                    if (!user.isVerified) {
                         throw new Error('user not verified with this email')
                     }
 
-                   const isCorrectPassword = await bcrypt.compare(credentials.password, user.password)
-                   if (isCorrectPassword) {
-                    return user
-                   }else{
-                    throw new Error('Incorrect Password')
-                   }
-                } catch (err:any) {
+                    const isCorrectPassword = await bcrypt.compare(credentials.password, user.password)
+                    if (isCorrectPassword) {
+                        return user
+                    } else {
+                        throw new Error('Incorrect Password')
+                    }
+                } catch (err: any) {
                     throw new Error(err)
                 }
             }
@@ -46,12 +46,32 @@ export const authOptions: NextAuthOptions = {
 
 
     ],
-    pages:{
-         signIn: '/auth/signin'
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token._id = user._id?.toString();
+                token.isVerified = user?.isVerified;
+                token.isAcceptingMessages = user?.isAcceptingMessages
+                token.username = user.username
+            }
+            return token
+        },
+        async session({ session, token }) {
+            if (token) {
+                session.user._id = token._id;
+                session.user.isVerified = token?.isVerified;
+                session.user.isAcceptingMessages = token?.isAcceptingMessages;
+                session.user.username = token.username;
+            }
+            return session
+        }
     },
-    session:{
-        strategy:"jwt"
+    pages: {
+        signIn: '/auth/signin'
     },
-    secret:process.env.NEXTAUTH_SECRET
-    
+    session: {
+        strategy: "jwt"
+    },
+    secret: process.env.NEXTAUTH_SECRET
+
 }
